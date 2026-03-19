@@ -25,7 +25,6 @@
             overflow: hidden;
         }
 
-        /* หน้า Loading ตอนเช็คสิทธิ์ */
         #loading-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--darker); color: white;
@@ -65,6 +64,9 @@
         .fuel-price { font-size: 14px; font-weight: 700; }
 
         .info-window { padding: 5px; width: 240px; }
+        .form-group { margin-bottom: 10px; font-size: 13px; background: #f9f9f9; padding: 10px; border-radius: 8px; }
+        .form-group label { font-weight: 600; display: block; margin-bottom: 5px; color: #333; }
+        .radio-group { display: flex; gap: 10px; }
         .btn-submit { 
             background: var(--primary); color: #000; border: none; padding: 12px; 
             border-radius: 8px; cursor: pointer; width: 100%; font-weight: 600;
@@ -98,7 +100,7 @@
 
     <script>
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbysSgAtS-Uuu6d1yL9IQly5BNwd3DeRVK8CEOP1XWsr_HWvSCOS3gBorkyNOEvsCIrF/exec'; 
-        const LIFF_ID = '2009532259-udVOoLeg'; // ใส่ ID ที่คุณแจ้งมาเรียบร้อยครับ
+        const LIFF_ID = '2009532259-udVOoLeg'; 
 
         let map, infowindow, lineUserId = "";
         let dbStatus = {}; 
@@ -106,23 +108,13 @@
 
         async function initMap() {
             try {
-                // 🔐 บังคับตรวจสอบ Login
                 await liff.init({ liffId: LIFF_ID });
-                
-                if (!liff.isLoggedIn()) {
-                    // ถ้ายังไม่ได้ Login ให้ส่งไปหน้า Login ของ LINE ทันที
-                    liff.login();
-                    return; 
-                }
+                if (!liff.isLoggedIn()) { liff.login(); return; }
 
-                // ดึงข้อมูล User หลังจาก Login สำเร็จ
                 const profile = await liff.getProfile();
                 lineUserId = profile.userId;
-
-                // ซ่อนหน้า Loading เมื่อตรวจสอบผ่านแล้ว
                 document.getElementById('loading-screen').style.display = 'none';
 
-                // โหลดข้อมูลปั๊มและราคาน้ำมัน
                 await fetchReports();
                 loadOilPrices(); 
 
@@ -131,7 +123,6 @@
                 PinElement = markerLib.PinElement;
 
                 let centerLocation = { lat: 12.866, lng: 101.225 }; 
-
                 if (navigator.geolocation) {
                     navigator.geolocation.getCurrentPosition(
                         (position) => {
@@ -143,10 +134,7 @@
                     );
                 } else { renderMap(centerLocation); }
 
-            } catch (err) {
-                console.error("LIFF Error:", err);
-                alert("กรุณาเปิดผ่านแอป LINE เท่านั้น");
-            }
+            } catch (err) { alert("กรุณาเปิดผ่านแอป LINE เท่านั้น"); }
         }
 
         async function renderMap(location) {
@@ -154,21 +142,18 @@
                 center: location, zoom: 14, mapId: "GAS_STATION_READY_ID",
                 disableDefaultUI: true, zoomControl: true
             });
-
             infowindow = new google.maps.InfoWindow();
             const { Place } = await google.maps.importLibrary("places");
-            
             const request = {
                 fields: ['displayName', 'location', 'id'],
                 locationRestriction: { center: location, radius: 10000 },
                 includedPrimaryTypes: ['gas_station'], 
                 maxResultCount: 20,
             };
-
             try {
                 const { places } = await Place.searchNearby(request);
                 if (places) places.forEach(createGasStationMarker);
-            } catch (error) { console.error("Search Error:", error); }
+            } catch (error) { console.error(error); }
         }
 
         function addUserMarker(loc) {
@@ -183,7 +168,7 @@
                 if(result.status === 'success') {
                     result.data.forEach(item => { dbStatus[item.placeId] = item; });
                 }
-            } catch (error) { console.error("Fetch DB Error", error); }
+            } catch (error) {}
         }
 
         function loadOilPrices() {
@@ -229,11 +214,19 @@
                         ${statusBadge}<br>
                         <small>สภาพจราจร: ${trafficTxt}</small>
                         <hr>
-                        <div style="font-size:13px; background:#f9f9f9; padding:10px; border-radius:8px; margin-bottom:10px;">
+                        <div class="form-group">
                             <label>สถานะน้ำมัน</label>
-                            <div>
+                            <div class="radio-group">
                                 <label><input type="radio" name="f" value="available" checked> มี</label>
                                 <label><input type="radio" name="f" value="empty"> หมด</label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>ปริมาณคิวที่รอ</label>
+                            <div class="radio-group">
+                                <label><input type="radio" name="q" value="น้อย" checked> น้อย</label>
+                                <label><input type="radio" name="q" value="ปานกลาง"> กลาง</label>
+                                <label><input type="radio" name="q" value="มาก"> มาก</label>
                             </div>
                         </div>
                         <button class="btn-submit" onclick="sendReport('${place.id}','${place.displayName.replace(/'/g, "\\\\'")}')">อัปเดตสถานะ</button>
@@ -245,13 +238,14 @@
 
         async function sendReport(id, name) {
             const fuelStatus = document.querySelector('input[name="f"]:checked').value;
+            const queueLevel = document.querySelector('input[name="q"]:checked').value; // คืนค่าตัวแปรนี้กลับมาแล้วครับ
             const btn = document.querySelector('.btn-submit');
             btn.innerText = "กำลังอัปเดต..."; btn.disabled = true;
 
             try {
                 await fetch(GAS_URL, { 
                     method: 'POST', 
-                    body: JSON.stringify({ placeId: id, placeName: name, fuelStatus, userId: lineUserId }) 
+                    body: JSON.stringify({ placeId: id, placeName: name, fuelStatus, queueLevel, userId: lineUserId }) 
                 });
                 location.reload();
             } catch (e) { alert("เกิดข้อผิดพลาด"); btn.disabled = false; }

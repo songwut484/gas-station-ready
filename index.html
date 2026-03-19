@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Gas Station Ready - รายงานสถานะปั๊มน้ำมัน</title>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
     <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
     <style>
@@ -32,7 +31,7 @@
             z-index: 9999; flex-direction: column; gap: 20px;
         }
 
-        /* --- Header & Profile --- */
+        /* Header & Profile */
         .header {
             background: linear-gradient(90deg, var(--darker) 0%, var(--dark) 100%);
             color: var(--text-light);
@@ -51,23 +50,17 @@
         .map-wrapper { position: relative; flex-grow: 1; width: 100%; }
         #map { height: 100%; width: 100%; }
 
-        /* --- Price Board (ปรับปรุงให้เต็มการ์ด) --- */
+        /* Price Board */
         .price-board {
             position: absolute; top: 15px; left: 15px;
             background: var(--card-bg);
             padding: 15px; border-radius: 16px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 5;
             border-top: 4px solid var(--primary);
-            width: 280px; /* ขนาดคงที่สำหรับ Desktop */
+            width: 280px;
         }
         .price-board h3 { margin: 0 0 12px 0; font-size: 14px; font-weight: 600; color: #333; }
-        
-        #price-list { 
-            display: grid; 
-            grid-template-columns: repeat(2, 1fr); /* แบ่ง 2 คอลัมน์ */
-            gap: 10px; 
-        }
-        
+        #price-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
         .price-card {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             padding: 10px 5px; border-radius: 12px;
@@ -77,29 +70,21 @@
         .fuel-name { font-size: 11px; font-weight: 600; margin-bottom: 2px; }
         .fuel-price { font-size: 16px; font-weight: 700; }
 
-        /* --- Mobile Responsive (สำคัญ!) --- */
-        @media (max-width: 768px) {
-            .price-board { 
-                top: auto; bottom: 25px; /* ย้ายไปล่างจอ */
-                left: 12px; right: 12px; /* ขยายเกือบเต็มความกว้างจอ */
-                width: auto; /* ให้ยืดตามหน้าจอ */
-                padding: 15px;
-            }
-            #price-list {
-                grid-template-columns: repeat(2, 1fr); /* 2 คอลัมน์ 2 แถว */
-            }
-            .fuel-price { font-size: 18px; } /* ตัวเลขราคาใหญ่ขึ้นบนมือถือ */
-        }
-
-        /* --- UI อื่นๆ --- */
-        .info-window { padding: 5px; width: 220px; }
+        /* InfoWindow & Form */
+        .info-window { padding: 5px; width: 240px; }
+        .info-window h3 { margin: 0 0 10px 0; font-size: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        .report-count-tag { font-size: 11px; color: #666; background: #eee; padding: 2px 8px; border-radius: 10px; margin-top: 5px; display: inline-block; }
         .form-group { margin-bottom: 10px; font-size: 13px; background: #f9f9f9; padding: 10px; border-radius: 8px; }
         .radio-group { display: flex; gap: 10px; margin-top: 5px; }
         .btn-submit { 
             background: var(--primary); color: #000; border: none; padding: 12px; 
-            border-radius: 8px; width: 100%; font-weight: 600; cursor: pointer;
+            border-radius: 8px; width: 100%; font-weight: 600; cursor: pointer; margin-top: 10px;
         }
-        .status-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 11px; color: white; margin-bottom: 8px;}
+        .status-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 11px; color: white; margin-bottom: 5px; font-weight: 600;}
+
+        @media (max-width: 768px) {
+            .price-board { top: auto; bottom: 25px; left: 12px; right: 12px; width: auto; padding: 15px; }
+        }
     </style>
 </head>
 <body>
@@ -117,14 +102,13 @@
     <div class="map-wrapper">
         <div class="price-board">
             <h3>ราคาน้ำมันวันนี้ 📈</h3>
-            <div id="price-list">
-                </div>
+            <div id="price-list"></div>
         </div>
         <div id="map"></div>
     </div>
 
     <script>
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbysSgAtS-Uuu6d1yL9IQly5BNwd3DeRVK8CEOP1XWsr_HWvSCOS3gBorkyNOEvsCIrF/exec'; 
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbzM8zr4cQGx9KBmSp2t6j860M3sUiQZ3zpXx07bC1_fOXu6F5F_wTMhxkhUEIUPzYnd/exec'; 
         const LIFF_ID = '2009532259-udVOoLeg'; 
 
         let map, infowindow, lineUserId = "";
@@ -219,20 +203,25 @@
 
         function createGasStationMarker(place) {
             let pinColor = "#607D8B"; 
-            let trafficTxt = '<span style="color:#888">⏳ รอการรายงานคิว</span>';
+            let trafficTxt = '⏳ รอการรายงานคิว';
             let statusBadge = '<span class="status-badge" style="background:#607D8B">รอข้อมูล</span>';
+            let reportCountText = '';
 
+            // ✅ ตรวจสอบและดึงจำนวนรายงานมาแสดง
             if (dbStatus[place.id]) {
                 const r = dbStatus[place.id];
+                const count = r.count || 1;
+                reportCountText = `<div class="report-count-tag">👥 ${count} รายงานใน 1 ชม. ล่าสุด</div>`;
+
                 if (r.fuelStatus === 'empty') {
                     pinColor = "#E53935";
-                    statusBadge = '<span class="status-badge" style="background:#E53935">น้ำมันหมด</span>';
-                    trafficTxt = '<span style="color:#E53935">❌ ปิดรับคิว</span>';
+                    statusBadge = '<span class="status-badge" style="background:#E53935">❌ น้ำมันหมด</span>';
+                    trafficTxt = 'งดรับคิว';
                 } else {
-                    statusBadge = '<span class="status-badge" style="background:#00E676; color:#000">มีน้ำมัน</span>';
-                    if (r.queueLevel === 'น้อย') { pinColor="#00E676"; trafficTxt='<span style="color:#00E676">✅ คิวน้อย</span>'; }
-                    else if (r.queueLevel === 'ปานกลาง') { pinColor="#FF9800"; trafficTxt='<span style="color:#FF9800">🚗 คิวปานกลาง</span>'; }
-                    else { pinColor="#E65100"; trafficTxt='<span style="color:#E65100">🛑 คิวยาวมาก</span>'; }
+                    statusBadge = '<span class="status-badge" style="background:#00E676; color:#000">✅ มีน้ำมัน</span>';
+                    if (r.queueLevel === 'น้อย') { pinColor="#00E676"; trafficTxt='🚗 คิวน้อย (โล่ง)'; }
+                    else if (r.queueLevel === 'ปานกลาง') { pinColor="#FF9800"; trafficTxt='🚗 คิวปานกลาง'; }
+                    else { pinColor="#E65100"; trafficTxt='🛑 คิวยาวมาก'; }
                 }
             }
 
@@ -242,26 +231,27 @@
             marker.addListener("click", () => {
                 const html = `
                     <div class="info-window">
-                        <h3 style="margin:0 0 10px 0; font-size:15px; border-bottom:1px solid #eee; padding-bottom:5px;">⛽ ${place.displayName}</h3>
+                        <h3>⛽ ${place.displayName}</h3>
                         ${statusBadge}<br>
-                        <small>สภาพจราจร: ${trafficTxt}</small>
-                        <hr style="border:0; border-top:1px dashed #ccc; margin:10px 0;">
+                        <div style="font-size:12px; margin-top:5px;"><b>สถานะคิว:</b> ${trafficTxt}</div>
+                        ${reportCountText}
+                        <hr style="border:0; border-top:1px dashed #ccc; margin:12px 0;">
                         <div class="form-group">
-                            <label>สถานะน้ำมัน</label>
+                            <label>แจ้งสถานะน้ำมัน</label>
                             <div class="radio-group">
                                 <label><input type="radio" name="f" value="available" checked> มี</label>
                                 <label><input type="radio" name="f" value="empty"> หมด</label>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label>ปริมาณคิวที่รอ</label>
+                            <label>แจ้งปริมาณคิวที่รอ</label>
                             <div class="radio-group">
                                 <label><input type="radio" name="q" value="น้อย" checked> น้อย</label>
                                 <label><input type="radio" name="q" value="ปานกลาง"> กลาง</label>
                                 <label><input type="radio" name="q" value="มาก"> มาก</label>
                             </div>
                         </div>
-                        <button class="btn-submit" onclick="sendReport('${place.id}','${place.displayName.replace(/'/g, "\\\\'")}')">อัปเดตสถานะ</button>
+                        <button class="btn-submit" onclick="sendReport('${place.id}','${place.displayName.replace(/'/g, "\\\\'")}')">ยืนยันและอัปเดตข้อมูล</button>
                     </div>`;
                 infowindow.setContent(html);
                 infowindow.open(map, marker);
@@ -272,7 +262,7 @@
             const fuelStatus = document.querySelector('input[name="f"]:checked').value;
             const queueLevel = document.querySelector('input[name="q"]:checked').value;
             const btn = document.querySelector('.btn-submit');
-            btn.innerText = "กำลังอัปเดต..."; btn.disabled = true;
+            btn.innerText = "กำลังบันทึก..."; btn.disabled = true;
 
             try {
                 await fetch(GAS_URL, { 

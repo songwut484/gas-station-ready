@@ -24,11 +24,34 @@
             overflow: hidden;
         }
 
+        /* --- 🏃 อนิเมชั่นคนวิ่ง --- */
+        @keyframes running {
+            0% { transform: translateX(-20px) skewX(-10deg); }
+            25% { transform: translateY(-5px) skewX(0deg); }
+            50% { transform: translateX(20px) skewX(10deg); }
+            75% { transform: translateY(-5px) skewX(0deg); }
+            100% { transform: translateX(-20px) skewX(-10deg); }
+        }
+
+        .runner {
+            font-size: 50px;
+            display: inline-block;
+            animation: running 0.6s infinite linear;
+        }
+
+        .runner-mini {
+            font-size: 18px;
+            display: inline-block;
+            animation: running 0.5s infinite linear;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+
         #loading-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--darker); color: white;
             display: flex; justify-content: center; align-items: center;
-            z-index: 9999; flex-direction: column; gap: 20px;
+            z-index: 9999; flex-direction: column; gap: 10px;
         }
 
         /* Header & Profile */
@@ -70,15 +93,15 @@
         .fuel-name { font-size: 11px; font-weight: 600; margin-bottom: 2px; }
         .fuel-price { font-size: 16px; font-weight: 700; }
 
-        /* InfoWindow & Form */
+        /* InfoWindow */
         .info-window { padding: 5px; width: 240px; }
-        .info-window h3 { margin: 0 0 10px 0; font-size: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
         .report-count-tag { font-size: 11px; color: #666; background: #eee; padding: 2px 8px; border-radius: 10px; margin-top: 5px; display: inline-block; }
         .form-group { margin-bottom: 10px; font-size: 13px; background: #f9f9f9; padding: 10px; border-radius: 8px; }
         .radio-group { display: flex; gap: 10px; margin-top: 5px; }
         .btn-submit { 
             background: var(--primary); color: #000; border: none; padding: 12px; 
             border-radius: 8px; width: 100%; font-weight: 600; cursor: pointer; margin-top: 10px;
+            display: flex; align-items: center; justify-content: center;
         }
         .status-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 11px; color: white; margin-bottom: 5px; font-weight: 600;}
 
@@ -90,8 +113,9 @@
 <body>
 
     <div id="loading-screen">
-        <div style="font-size: 24px;">⛽ GasReady</div>
-        <div>กำลังตรวจสอบสิทธิ์ผ่าน LINE...</div>
+        <div class="runner">🏃💨</div>
+        <div style="font-size: 24px; font-weight:700; margin-top:10px;">⛽ GasReady</div>
+        <div style="color: #aaa; font-size: 14px;">กำลังตรวจสอบสิทธิ์ LINE...</div>
     </div>
 
     <div class="header">
@@ -207,7 +231,6 @@
             let statusBadge = '<span class="status-badge" style="background:#607D8B">รอข้อมูล</span>';
             let reportCountText = '';
 
-            // ✅ ตรวจสอบและดึงจำนวนรายงานมาแสดง
             if (dbStatus[place.id]) {
                 const r = dbStatus[place.id];
                 const count = r.count || 1;
@@ -231,7 +254,7 @@
             marker.addListener("click", () => {
                 const html = `
                     <div class="info-window">
-                        <h3>⛽ ${place.displayName}</h3>
+                        <h3 style="margin:0 0 10px 0; font-size:15px; border-bottom:1px solid #eee; padding-bottom:5px;">⛽ ${place.displayName}</h3>
                         ${statusBadge}<br>
                         <div style="font-size:12px; margin-top:5px;"><b>สถานะคิว:</b> ${trafficTxt}</div>
                         ${reportCountText}
@@ -262,7 +285,10 @@
             const fuelStatus = document.querySelector('input[name="f"]:checked').value;
             const queueLevel = document.querySelector('input[name="q"]:checked').value;
             const btn = document.querySelector('.btn-submit');
-            btn.innerText = "กำลังบันทึก..."; btn.disabled = true;
+            
+            // ✅ เปลี่ยนข้อความเป็นอนิเมชั่นวิ่งในปุ่ม
+            btn.innerHTML = '<span class="runner-mini">🏃💨</span> กำลังบันทึก...';
+            btn.disabled = true;
 
             try {
                 await fetch(GAS_URL, { 
@@ -270,7 +296,11 @@
                     body: JSON.stringify({ placeId: id, placeName: name, fuelStatus, queueLevel, userId: lineUserId }) 
                 });
                 location.reload();
-            } catch (e) { alert("เกิดข้อผิดพลาด"); btn.disabled = false; }
+            } catch (e) { 
+                alert("เกิดข้อผิดพลาด"); 
+                btn.innerHTML = 'ยืนยันและอัปเดตข้อมูล';
+                btn.disabled = false; 
+            }
         }
     </script>
 

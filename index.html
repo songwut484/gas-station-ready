@@ -35,46 +35,54 @@
         .header {
             background: linear-gradient(90deg, var(--darker) 0%, var(--dark) 100%);
             color: var(--text-light);
-            padding: 12px 20px;
+            padding: 10px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
             z-index: 10;
         }
-        .header .brand { font-size: 20px; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 8px; }
+        .header .brand { font-size: 18px; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 8px; }
         .header .brand span { color: var(--primary); }
+
+        /* --- สไตล์ใหม่สำหรับ Profile --- */
+        #user-profile { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+        #user-profile img { width: 35px; height: 35px; border-radius: 50%; border: 2px solid var(--primary); }
+        #user-profile .name { display: flex; flex-direction: column; }
 
         .map-wrapper { position: relative; flex-grow: 1; width: 100%; }
         #map { height: 100%; width: 100%; }
 
         .price-board {
-            position: absolute; top: 20px; left: 20px;
+            position: absolute; top: 15px; left: 15px;
             background: var(--card-bg); backdrop-filter: blur(10px);
-            padding: 15px; border-radius: 16px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.15); z-index: 5;
-            border-left: 5px solid var(--primary);
+            padding: 12px; border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1); z-index: 5;
+            border-left: 4px solid var(--primary);
         }
-        #price-list { display: flex; gap: 8px; flex-direction: row; flex-wrap: wrap; max-width: 280px; }
+        #price-list { display: flex; gap: 6px; flex-direction: row; flex-wrap: wrap; max-width: 260px; }
         .price-card {
             display: flex; flex-direction: column; align-items: center;
-            padding: 8px 10px; border-radius: 10px; min-width: 65px; flex-grow: 1;
+            padding: 6px 8px; border-radius: 8px; min-width: 55px; flex-grow: 1;
         }
-        .fuel-name { font-size: 11px; font-weight: 600; }
-        .fuel-price { font-size: 14px; font-weight: 700; }
+        .fuel-name { font-size: 10px; font-weight: 600; }
+        .fuel-price { font-size: 12px; font-weight: 700; }
 
-        .info-window { padding: 5px; width: 240px; }
-        .form-group { margin-bottom: 10px; font-size: 13px; background: #f9f9f9; padding: 10px; border-radius: 8px; }
-        .form-group label { font-weight: 600; display: block; margin-bottom: 5px; color: #333; }
-        .radio-group { display: flex; gap: 10px; }
+        .info-window { padding: 3px; width: 220px; }
+        .form-group { margin-bottom: 8px; font-size: 12px; background: #f9f9f9; padding: 8px; border-radius: 6px; }
+        .form-group label { font-weight: 600; display: block; margin-bottom: 4px; color: #333; }
+        .radio-group { display: flex; gap: 8px; }
         .btn-submit { 
-            background: var(--primary); color: #000; border: none; padding: 12px; 
-            border-radius: 8px; cursor: pointer; width: 100%; font-weight: 600;
+            background: var(--primary); color: #000; border: none; padding: 10px; 
+            border-radius: 6px; cursor: pointer; width: 100%; font-weight: 600; font-size: 13px;
         }
-        .status-badge { display: inline-block; padding: 5px 12px; border-radius: 20px; font-size: 12px; color: white; margin-bottom: 8px;}
+        .status-badge { display: inline-block; padding: 4px 10px; border-radius: 15px; font-size: 11px; color: white; margin-bottom: 6px;}
 
         @media (max-width: 768px) {
-            .price-board { top: auto; bottom: 25px; left: 10px; right: 10px; border-left: none; border-top: 4px solid var(--primary); }
+            .header { padding: 8px 15px; }
+            .header .brand { font-size: 16px; }
+            #user-profile img { width: 30px; height: 30px; }
+            .price-board { top: auto; bottom: 20px; left: 8px; right: 8px; border-left: none; border-top: 3px solid var(--primary); }
             #price-list { flex-wrap: nowrap; overflow-x: auto; }
         }
     </style>
@@ -88,11 +96,12 @@
 
     <div class="header">
         <h1 class="brand">⛽ Gas<span>Ready</span></h1>
+        <div id="user-profile"></div>
     </div>
 
     <div class="map-wrapper">
         <div class="price-board">
-            <h3 style="margin:0 0 10px 0; font-size:15px;">ราคาน้ำมันวันนี้ 📈</h3>
+            <h3 style="margin:0 0 8px 0; font-size:14px;">ราคาน้ำมันวันนี้ 📈</h3>
             <div id="price-list"></div>
         </div>
         <div id="map"></div>
@@ -113,6 +122,17 @@
 
                 const profile = await liff.getProfile();
                 lineUserId = profile.userId;
+
+                // ✅ JavaScript ส่วนใหม่: แสดงผลรูปและชื่อใน Header
+                const profileElement = document.getElementById('user-profile');
+                profileElement.innerHTML = `
+                    <div class="name">
+                        <span>สวัสดี</span>
+                        <span style="font-weight: 600; color:var(--primary);">${profile.displayName}</span>
+                    </div>
+                    <img src="${profile.pictureUrl || 'https://via.placeholder.com/150'}" alt="Profile">
+                `;
+
                 document.getElementById('loading-screen').style.display = 'none';
 
                 await fetchReports();
@@ -210,7 +230,7 @@
             marker.addListener("click", () => {
                 const html = `
                     <div class="info-window">
-                        <h3 style="margin:0 0 10px 0; font-size:16px;">⛽ ${place.displayName}</h3>
+                        <h3 style="margin:0 0 8px 0; font-size:14px;">⛽ ${place.displayName}</h3>
                         ${statusBadge}<br>
                         <small>สภาพจราจร: ${trafficTxt}</small>
                         <hr>
@@ -238,7 +258,7 @@
 
         async function sendReport(id, name) {
             const fuelStatus = document.querySelector('input[name="f"]:checked').value;
-            const queueLevel = document.querySelector('input[name="q"]:checked').value; // คืนค่าตัวแปรนี้กลับมาแล้วครับ
+            const queueLevel = document.querySelector('input[name="q"]:checked').value; 
             const btn = document.querySelector('.btn-submit');
             btn.innerText = "กำลังอัปเดต..."; btn.disabled = true;
 

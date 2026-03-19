@@ -14,7 +14,7 @@
             --dark: #121212;
             --darker: #000000;
             --text-light: #F5F5F5;
-            --card-bg: rgba(255, 255, 255, 0.95);
+            --card-bg: rgba(255, 255, 255, 0.98);
         }
 
         body, html { 
@@ -32,6 +32,7 @@
             z-index: 9999; flex-direction: column; gap: 20px;
         }
 
+        /* --- Header & Profile --- */
         .header {
             background: linear-gradient(90deg, var(--darker) 0%, var(--dark) 100%);
             color: var(--text-light);
@@ -42,49 +43,63 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
             z-index: 10;
         }
-        .header .brand { font-size: 18px; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 8px; }
+        .header .brand { font-size: 18px; font-weight: 700; margin: 0; }
         .header .brand span { color: var(--primary); }
-
-        /* --- สไตล์ใหม่สำหรับ Profile --- */
-        #user-profile { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+        #user-profile { display: flex; align-items: center; gap: 10px; font-size: 12px; }
         #user-profile img { width: 35px; height: 35px; border-radius: 50%; border: 2px solid var(--primary); }
-        #user-profile .name { display: flex; flex-direction: column; }
 
         .map-wrapper { position: relative; flex-grow: 1; width: 100%; }
         #map { height: 100%; width: 100%; }
 
+        /* --- Price Board (ปรับปรุงให้เต็มการ์ด) --- */
         .price-board {
             position: absolute; top: 15px; left: 15px;
-            background: var(--card-bg); backdrop-filter: blur(10px);
-            padding: 12px; border-radius: 12px;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.1); z-index: 5;
-            border-left: 4px solid var(--primary);
+            background: var(--card-bg);
+            padding: 15px; border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 5;
+            border-top: 4px solid var(--primary);
+            width: 280px; /* ขนาดคงที่สำหรับ Desktop */
         }
-        #price-list { display: flex; gap: 6px; flex-direction: row; flex-wrap: wrap; max-width: 260px; }
+        .price-board h3 { margin: 0 0 12px 0; font-size: 14px; font-weight: 600; color: #333; }
+        
+        #price-list { 
+            display: grid; 
+            grid-template-columns: repeat(2, 1fr); /* แบ่ง 2 คอลัมน์ */
+            gap: 10px; 
+        }
+        
         .price-card {
-            display: flex; flex-direction: column; align-items: center;
-            padding: 6px 8px; border-radius: 8px; min-width: 55px; flex-grow: 1;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 10px 5px; border-radius: 12px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            text-align: center;
         }
-        .fuel-name { font-size: 10px; font-weight: 600; }
-        .fuel-price { font-size: 12px; font-weight: 700; }
+        .fuel-name { font-size: 11px; font-weight: 600; margin-bottom: 2px; }
+        .fuel-price { font-size: 16px; font-weight: 700; }
 
-        .info-window { padding: 3px; width: 220px; }
-        .form-group { margin-bottom: 8px; font-size: 12px; background: #f9f9f9; padding: 8px; border-radius: 6px; }
-        .form-group label { font-weight: 600; display: block; margin-bottom: 4px; color: #333; }
-        .radio-group { display: flex; gap: 8px; }
-        .btn-submit { 
-            background: var(--primary); color: #000; border: none; padding: 10px; 
-            border-radius: 6px; cursor: pointer; width: 100%; font-weight: 600; font-size: 13px;
-        }
-        .status-badge { display: inline-block; padding: 4px 10px; border-radius: 15px; font-size: 11px; color: white; margin-bottom: 6px;}
-
+        /* --- Mobile Responsive (สำคัญ!) --- */
         @media (max-width: 768px) {
-            .header { padding: 8px 15px; }
-            .header .brand { font-size: 16px; }
-            #user-profile img { width: 30px; height: 30px; }
-            .price-board { top: auto; bottom: 20px; left: 8px; right: 8px; border-left: none; border-top: 3px solid var(--primary); }
-            #price-list { flex-wrap: nowrap; overflow-x: auto; }
+            .price-board { 
+                top: auto; bottom: 25px; /* ย้ายไปล่างจอ */
+                left: 12px; right: 12px; /* ขยายเกือบเต็มความกว้างจอ */
+                width: auto; /* ให้ยืดตามหน้าจอ */
+                padding: 15px;
+            }
+            #price-list {
+                grid-template-columns: repeat(2, 1fr); /* 2 คอลัมน์ 2 แถว */
+            }
+            .fuel-price { font-size: 18px; } /* ตัวเลขราคาใหญ่ขึ้นบนมือถือ */
         }
+
+        /* --- UI อื่นๆ --- */
+        .info-window { padding: 5px; width: 220px; }
+        .form-group { margin-bottom: 10px; font-size: 13px; background: #f9f9f9; padding: 10px; border-radius: 8px; }
+        .radio-group { display: flex; gap: 10px; margin-top: 5px; }
+        .btn-submit { 
+            background: var(--primary); color: #000; border: none; padding: 12px; 
+            border-radius: 8px; width: 100%; font-weight: 600; cursor: pointer;
+        }
+        .status-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 11px; color: white; margin-bottom: 8px;}
     </style>
 </head>
 <body>
@@ -101,8 +116,9 @@
 
     <div class="map-wrapper">
         <div class="price-board">
-            <h3 style="margin:0 0 8px 0; font-size:14px;">ราคาน้ำมันวันนี้ 📈</h3>
-            <div id="price-list"></div>
+            <h3>ราคาน้ำมันวันนี้ 📈</h3>
+            <div id="price-list">
+                </div>
         </div>
         <div id="map"></div>
     </div>
@@ -122,15 +138,12 @@
 
                 const profile = await liff.getProfile();
                 lineUserId = profile.userId;
-
-                // ✅ JavaScript ส่วนใหม่: แสดงผลรูปและชื่อใน Header
-                const profileElement = document.getElementById('user-profile');
-                profileElement.innerHTML = `
-                    <div class="name">
-                        <span>สวัสดี</span>
-                        <span style="font-weight: 600; color:var(--primary);">${profile.displayName}</span>
+                document.getElementById('user-profile').innerHTML = `
+                    <div style="text-align:right">
+                        <div style="color:#888; font-size:10px;">สวัสดี</div>
+                        <div style="font-weight:600; color:var(--primary)">${profile.displayName}</div>
                     </div>
-                    <img src="${profile.pictureUrl || 'https://via.placeholder.com/150'}" alt="Profile">
+                    <img src="${profile.pictureUrl}" alt="Profile">
                 `;
 
                 document.getElementById('loading-screen').style.display = 'none';
@@ -153,8 +166,7 @@
                         () => { renderMap(centerLocation); }
                     );
                 } else { renderMap(centerLocation); }
-
-            } catch (err) { alert("กรุณาเปิดผ่านแอป LINE เท่านั้น"); }
+            } catch (err) { alert("กรุณาเปิดผ่านแอป LINE"); }
         }
 
         async function renderMap(location) {
@@ -199,7 +211,7 @@
                 { n: "ดีเซล", p: "32.94", b: "#E3F2FD", c: "#1565C0" }
             ];
             document.getElementById('price-list').innerHTML = prices.map(i => `
-                <div class="price-card" style="background:${i.b}; border:1px solid ${i.c}44;">
+                <div class="price-card" style="background:${i.b}; border:1px solid ${i.c}22;">
                     <div class="fuel-name" style="color:${i.c}">${i.n}</div>
                     <div class="fuel-price" style="color:${i.c}">${i.p}</div>
                 </div>`).join('');
@@ -230,10 +242,10 @@
             marker.addListener("click", () => {
                 const html = `
                     <div class="info-window">
-                        <h3 style="margin:0 0 8px 0; font-size:14px;">⛽ ${place.displayName}</h3>
+                        <h3 style="margin:0 0 10px 0; font-size:15px; border-bottom:1px solid #eee; padding-bottom:5px;">⛽ ${place.displayName}</h3>
                         ${statusBadge}<br>
                         <small>สภาพจราจร: ${trafficTxt}</small>
-                        <hr>
+                        <hr style="border:0; border-top:1px dashed #ccc; margin:10px 0;">
                         <div class="form-group">
                             <label>สถานะน้ำมัน</label>
                             <div class="radio-group">
@@ -258,7 +270,7 @@
 
         async function sendReport(id, name) {
             const fuelStatus = document.querySelector('input[name="f"]:checked').value;
-            const queueLevel = document.querySelector('input[name="q"]:checked').value; 
+            const queueLevel = document.querySelector('input[name="q"]:checked').value;
             const btn = document.querySelector('.btn-submit');
             btn.innerText = "กำลังอัปเดต..."; btn.disabled = true;
 

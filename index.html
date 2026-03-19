@@ -33,19 +33,8 @@
             100% { transform: translateX(-20px) skewX(-10deg); }
         }
 
-        .runner {
-            font-size: 50px;
-            display: inline-block;
-            animation: running 0.6s infinite linear;
-        }
-
-        .runner-mini {
-            font-size: 18px;
-            display: inline-block;
-            animation: running 0.5s infinite linear;
-            vertical-align: middle;
-            margin-right: 8px;
-        }
+        .runner { font-size: 50px; display: inline-block; animation: running 0.6s infinite linear; }
+        .runner-mini { font-size: 18px; display: inline-block; animation: running 0.5s infinite linear; vertical-align: middle; margin-right: 8px; }
 
         #loading-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -109,6 +98,10 @@
             gap: 8px;
             transition: 0.3s;
             border: 1px solid #FFF176;
+            cursor: pointer;
+            width: 100%;
+            box-sizing: border-box;
+            font-family: 'Prompt';
         }
         .donate-btn:active { transform: scale(0.95); }
         .heart { color: #e91e63; display: inline-block; animation: heartBeat 1.2s infinite; }
@@ -118,7 +111,7 @@
             50% { transform: scale(1.3); }
         }
 
-        /* --- ✨ ใหม่: สไตล์หน้าจอขอบคุณ --- */
+        /* --- 💖✨ ใหม่: สไตล์หน้าจอขอบคุณและโดเนท --- */
         #thank-you-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.9);
@@ -128,14 +121,39 @@
             backdrop-filter: blur(8px);
         }
         .thank-you-card {
-            background: white; padding: 40px 20px; border-radius: 24px;
+            background: white; padding: 30px 20px 20px 20px; border-radius: 24px;
             width: 85%; max-width: 320px; box-shadow: 0 20px 50px rgba(0,230,118,0.3);
         }
-        .coffee-cup { font-size: 60px; margin-bottom: 15px; display: inline-block; }
+        .coffee-cup { font-size: 40px; margin-bottom: 10px; display: inline-block; }
+        
+        /* ✅ สไตล์ QR Code */
+        .qr-code-img {
+            max-width: 200px;
+            margin: 15px auto;
+            display: block;
+            border: 2px solid #eee;
+            border-radius: 12px;
+        }
+        
+        /* ✅ สไตล์ปุ่มบันทึกรูป */
+        .btn-save {
+            background: #f5f5f5;
+            color: #333;
+            border: 1px solid #ccc;
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-size: 12px;
+            margin-top: 5px;
+            cursor: pointer;
+            font-family: 'Prompt';
+        }
+        .btn-save:active { background: #e0e0e0; }
+
         .btn-back {
-            margin-top: 25px; background: var(--primary); color: #000;
+            margin-top: 20px; background: var(--primary); color: #000;
             border: none; padding: 12px 30px; border-radius: 12px;
             font-weight: 700; cursor: pointer; font-family: 'Prompt';
+            width: 100%;
         }
 
         /* InfoWindow */
@@ -166,13 +184,17 @@
     <div id="thank-you-overlay">
         <div class="thank-you-card">
             <div class="coffee-cup">☕✨</div>
-            <h2 style="color: #333; margin: 0;">ขอบคุณมากครับ!</h2>
-            <p style="color: #666; font-size: 14px; line-height: 1.6; margin-top: 10px;">
-                กาแฟแก้วนี้คือพลังสำคัญ <br> 
+            <h2 style="color: #333; margin: 0; font-size: 18px;">เลี้ยงกาแฟทีมพัฒนา</h2>
+            
+            <img id="qr-code-display" src="" alt="PromptPay QR Code" class="qr-code-img">
+            
+            <button class="btn-save" onclick="downloadQRCode()">💾 บันทึกรูป QR Code</button>
+
+            <p style="color: #666; font-size: 12px; line-height: 1.6; margin-top: 15px;">
+                ขอบคุณล่วงหน้าครับ! กาแฟแก้วนี้คือพลังสำคัญ <br> 
                 ให้โปรแกรมเมอร์ <span class="runner-mini">🏃💨</span> <br>
                 รีบปั่นฟีเจอร์ใหม่ๆ มาให้ใช้งานกันครับ!
             </p>
-            <div style="font-size: 30px; margin-top: 10px;">❤️</div>
             <button class="btn-back" onclick="closeThankYou()">กลับสู่หน้าแผนที่</button>
         </div>
     </div>
@@ -187,9 +209,9 @@
             <h3>ราคาน้ำมันวันนี้ 📈</h3>
             <div id="price-list"></div>
             
-            <a href="https://promptpay.io/0944597416" class="donate-btn" onclick="showThankYou()" target="_blank">
+            <button class="donate-btn" onclick="openDonateOverlay()">
                 <span class="heart">❤️</span> เลี้ยงกาแฟทีมพัฒนา ☕
-            </a>
+            </button>
         </div>
         <div id="map"></div>
     </div>
@@ -198,16 +220,74 @@
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbzM8zr4cQGx9KBmSp2t6j860M3sUiQZ3zpXx07bC1_fOXu6F5F_wTMhxkhUEIUPzYnd/exec'; 
         const LIFF_ID = '2009532259-udVOoLeg'; 
 
+        // ✅ ตั้งค่า PromptPay ของคุณตรงนี้ (สำคัญมาก!)
+        const PROMPTPAY_ID = '0944597416'; // เปลี่ยนเป็นเบอร์หรือเลขบัตรประชาชนของคุณ
+        const DONATE_AMOUNT = null;       // จำนวนเงินเริ่มต้น (ใส่ null ถ้าไม่ต้องการระบุยอด)
+
         let map, infowindow, lineUserId = "";
         let dbStatus = {}; 
         let AdvancedMarkerElement, PinElement;
 
-        // ✅ ฟังก์ชันเปิด-ปิดหน้าจอขอบคุณ
-        function showThankYou() {
+        // ✅ ฟังก์ชันเปิดหน้าจอโดเนทและสร้าง QR Code
+        function openDonateOverlay() {
+            const qrDisplay = document.getElementById('qr-code-display');
+            
+            // สร้าง URL ของรูป QR Code จาก promptpay.io (เพิ่ม .png ต่อท้าย)
+            let qrUrl = `https://promptpay.io/${PROMPTPAY_ID}`;
+            if (DONATE_AMOUNT) {
+                qrUrl += `/${DONATE_AMOUNT}`;
+            }
+            qrUrl += '.png'; // สั่งให้คืนค่าเป็นรูปภาพ
+
+            // ตั้งค่า src ของรูปใน overlay
+            qrDisplay.src = qrUrl;
+            
+            // แสดง overlay
             document.getElementById('thank-you-overlay').style.display = 'flex';
         }
+
+        // ✅ ฟังก์ชันปิดหน้าจอขอบคุณ
         function closeThankYou() {
             document.getElementById('thank-you-overlay').style.display = 'none';
+        }
+
+        // ✅ ฟังก์ชันบันทึกรูป QR Code ลงเครื่อง (รองรับ cross-origin)
+        async function downloadQRCode() {
+            const qrImageUrl = document.getElementById('qr-code-display').src;
+            if (!qrImageUrl) return;
+
+            const btnSave = document.querySelector('.btn-save');
+            btnSave.innerText = '⌛ กำลังดาวน์โหลด...';
+            btnSave.disabled = true;
+
+            try {
+                // ดึงข้อมูลรูปภาพเป็น Blob เพื่อเลี่ยงปัญหา cross-origin download
+                const response = await fetch(qrImageUrl);
+                const blob = await response.blob();
+                
+                // สร้าง Object URL ชั่วคราว
+                const url = window.URL.createObjectURL(blob);
+                
+                // สร้างลิงก์หลอกๆ เพื่อสั่งดาวน์โหลด
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = `PromptPay_QR_${PROMPTPAY_ID}.png`; // ชื่อไฟล์ตอนเซฟ
+                
+                document.body.appendChild(a);
+                a.click();
+                
+                // เคลียร์ memory
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+
+            } catch (error) {
+                console.error('Download error:', error);
+                alert('ไม่สามารถบันทึกรูปได้โดยอัตโนมัติ กรุณาแคปหน้าจอแทนครับ');
+            } finally {
+                btnSave.innerText = '💾 บันทึกรูป QR Code';
+                btnSave.disabled = false;
+            }
         }
 
         async function initMap() {

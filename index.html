@@ -25,6 +25,14 @@
             overflow: hidden;
         }
 
+        /* หน้า Loading ตอนเช็คสิทธิ์ */
+        #loading-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--darker); color: white;
+            display: flex; justify-content: center; align-items: center;
+            z-index: 9999; flex-direction: column; gap: 20px;
+        }
+
         .header {
             background: linear-gradient(90deg, var(--darker) 0%, var(--dark) 100%);
             color: var(--text-light);
@@ -37,38 +45,26 @@
         }
         .header .brand { font-size: 20px; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 8px; }
         .header .brand span { color: var(--primary); }
-        .header .subtitle { font-size: 11px; color: #aaa; }
 
         .map-wrapper { position: relative; flex-grow: 1; width: 100%; }
         #map { height: 100%; width: 100%; }
 
         .price-board {
-            position: absolute;
-            top: 20px; left: 20px;
-            background: var(--card-bg);
-            backdrop-filter: blur(10px);
-            padding: 15px;
-            border-radius: 16px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
-            z-index: 5;
+            position: absolute; top: 20px; left: 20px;
+            background: var(--card-bg); backdrop-filter: blur(10px);
+            padding: 15px; border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15); z-index: 5;
             border-left: 5px solid var(--primary);
         }
-        .price-board h3 { margin: 0 0 10px 0; font-size: 15px; color: var(--dark); font-weight: 600; }
         #price-list { display: flex; gap: 8px; flex-direction: row; flex-wrap: wrap; max-width: 280px; }
-        
         .price-card {
             display: flex; flex-direction: column; align-items: center;
             padding: 8px 10px; border-radius: 10px; min-width: 65px; flex-grow: 1;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
-        .fuel-name { font-size: 11px; font-weight: 600; margin-bottom: 2px; }
+        .fuel-name { font-size: 11px; font-weight: 600; }
         .fuel-price { font-size: 14px; font-weight: 700; }
-        .update-time { font-size: 10px; color: #888; text-align: right; margin-top: 10px; }
 
         .info-window { padding: 5px; width: 240px; }
-        .info-window h3 { margin: 0 0 10px 0; font-size: 16px; font-weight: 600; color: var(--dark);}
-        .form-group { margin-bottom: 10px; font-size: 13px; background: #f9f9f9; padding: 10px; border-radius: 8px;}
-        .radio-group { display: flex; gap: 10px; }
         .btn-submit { 
             background: var(--primary); color: #000; border: none; padding: 12px; 
             border-radius: 8px; cursor: pointer; width: 100%; font-weight: 600;
@@ -77,68 +73,80 @@
 
         @media (max-width: 768px) {
             .price-board { top: auto; bottom: 25px; left: 10px; right: 10px; border-left: none; border-top: 4px solid var(--primary); }
-            #price-list { flex-wrap: nowrap; overflow-x: auto; max-width: 100%; padding-bottom: 5px; }
-            #price-list::-webkit-scrollbar { display: none; }
-            .price-card { min-width: 75px; }
+            #price-list { flex-wrap: nowrap; overflow-x: auto; }
         }
     </style>
 </head>
 <body>
 
+    <div id="loading-screen">
+        <div style="font-size: 24px;">⛽ GasReady</div>
+        <div>กำลังตรวจสอบสิทธิ์ผ่าน LINE...</div>
+    </div>
+
     <div class="header">
         <h1 class="brand">⛽ Gas<span>Ready</span></h1>
-        <div class="subtitle">เช็กปั๊ม & รายงานคิว Real-time</div>
     </div>
 
     <div class="map-wrapper">
         <div class="price-board">
-            <h3>ราคาน้ำมันวันนี้ 📈</h3>
-            <div id="price-list">
-                <div style="color:#aaa; font-size: 12px;">กำลังดึงข้อมูล...</div>
-            </div>
-            <div class="update-time" id="price-update-time">อัปเดต: -</div>
+            <h3 style="margin:0 0 10px 0; font-size:15px;">ราคาน้ำมันวันนี้ 📈</h3>
+            <div id="price-list"></div>
         </div>
         <div id="map"></div>
     </div>
 
     <script>
-        // 2. ใช้ URL และ API KEY จากไฟล์ที่ทำงานได้จริงของคุณ
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbysSgAtS-Uuu6d1yL9IQly5BNwd3DeRVK8CEOP1XWsr_HWvSCOS3gBorkyNOEvsCIrF/exec'; 
-        const LIFF_ID = '2009532259-udVOoLeg'; // อย่าลืมใส่ LIFF ID จาก LINE Developer นะครับ
+        const LIFF_ID = '2009532259-udVOoLeg'; // ใส่ ID ที่คุณแจ้งมาเรียบร้อยครับ
 
-        let map, infowindow, trafficLayer, lineUserId = "guest_user";
+        let map, infowindow, lineUserId = "";
         let dbStatus = {}; 
         let AdvancedMarkerElement, PinElement;
 
         async function initMap() {
-            // เริ่มต้นระบบ LINE LIFF (ใส่ try-catch เพื่อให้แผนที่ยังโหลดได้แม้ LIFF จะมีปัญหา)
             try {
+                // 🔐 บังคับตรวจสอบ Login
                 await liff.init({ liffId: LIFF_ID });
-                if (liff.isLoggedIn()) {
-                    const profile = await liff.getProfile();
-                    lineUserId = profile.userId;
+                
+                if (!liff.isLoggedIn()) {
+                    // ถ้ายังไม่ได้ Login ให้ส่งไปหน้า Login ของ LINE ทันที
+                    liff.login();
+                    return; 
                 }
-            } catch (err) { console.log("LIFF Init Skip/Error", err); }
 
-            await fetchReports();
-            loadOilPrices(); 
+                // ดึงข้อมูล User หลังจาก Login สำเร็จ
+                const profile = await liff.getProfile();
+                lineUserId = profile.userId;
 
-            const markerLib = await google.maps.importLibrary("marker");
-            AdvancedMarkerElement = markerLib.AdvancedMarkerElement;
-            PinElement = markerLib.PinElement;
+                // ซ่อนหน้า Loading เมื่อตรวจสอบผ่านแล้ว
+                document.getElementById('loading-screen').style.display = 'none';
 
-            let centerLocation = { lat: 12.866, lng: 101.225 }; // พิกัดระยอง (หนองละลอก)
+                // โหลดข้อมูลปั๊มและราคาน้ำมัน
+                await fetchReports();
+                loadOilPrices(); 
 
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        centerLocation = { lat: position.coords.latitude, lng: position.coords.longitude };
-                        renderMap(centerLocation); 
-                        addUserMarker(centerLocation);
-                    },
-                    () => { renderMap(centerLocation); }
-                );
-            } else { renderMap(centerLocation); }
+                const markerLib = await google.maps.importLibrary("marker");
+                AdvancedMarkerElement = markerLib.AdvancedMarkerElement;
+                PinElement = markerLib.PinElement;
+
+                let centerLocation = { lat: 12.866, lng: 101.225 }; 
+
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            centerLocation = { lat: position.coords.latitude, lng: position.coords.longitude };
+                            renderMap(centerLocation); 
+                            addUserMarker(centerLocation);
+                        },
+                        () => { renderMap(centerLocation); }
+                    );
+                } else { renderMap(centerLocation); }
+
+            } catch (err) {
+                console.error("LIFF Error:", err);
+                alert("กรุณาเปิดผ่านแอป LINE เท่านั้น");
+            }
         }
 
         async function renderMap(location) {
@@ -147,14 +155,11 @@
                 disableDefaultUI: true, zoomControl: true
             });
 
-            trafficLayer = new google.maps.TrafficLayer();
-            trafficLayer.setMap(map);
             infowindow = new google.maps.InfoWindow();
-
             const { Place } = await google.maps.importLibrary("places");
-            // ใช้ค่า radius 10,000 เมตรตามไฟล์ที่ทำงานได้ของคุณ
+            
             const request = {
-                fields: ['displayName', 'location', 'id', 'accessibilityOptions'],
+                fields: ['displayName', 'location', 'id'],
                 locationRestriction: { center: location, radius: 10000 },
                 includedPrimaryTypes: ['gas_station'], 
                 maxResultCount: 20,
@@ -193,11 +198,10 @@
                     <div class="fuel-name" style="color:${i.c}">${i.n}</div>
                     <div class="fuel-price" style="color:${i.c}">${i.p}</div>
                 </div>`).join('');
-            document.getElementById('price-update-time').innerText = `อัปเดต: ${new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'})} น.`;
         }
 
         function createGasStationMarker(place) {
-            let pinColor = "#607D8B"; // สีเทา (รอรายงาน)
+            let pinColor = "#607D8B"; 
             let trafficTxt = '<span style="color:#888">⏳ รอการรายงานคิว</span>';
             let statusBadge = '<span class="status-badge" style="background:#607D8B">รอข้อมูล</span>';
 
@@ -221,26 +225,18 @@
             marker.addListener("click", () => {
                 const html = `
                     <div class="info-window">
-                        <h3>⛽ ${place.displayName}</h3>
+                        <h3 style="margin:0 0 10px 0; font-size:16px;">⛽ ${place.displayName}</h3>
                         ${statusBadge}<br>
                         <small>สภาพจราจร: ${trafficTxt}</small>
                         <hr>
-                        <div class="form-group">
-                            <label>สถานะน้ำมันปัจจุบัน</label>
-                            <div class="radio-group">
-                                <label><input type="radio" name="f" value="available" checked> มีน้ำมัน</label>
+                        <div style="font-size:13px; background:#f9f9f9; padding:10px; border-radius:8px; margin-bottom:10px;">
+                            <label>สถานะน้ำมัน</label>
+                            <div>
+                                <label><input type="radio" name="f" value="available" checked> มี</label>
                                 <label><input type="radio" name="f" value="empty"> หมด</label>
                             </div>
                         </div>
-                        <div class="form-group">
-                            <label>ปริมาณคิวที่รอ</label>
-                            <div class="radio-group">
-                                <label><input type="radio" name="q" value="น้อย" checked> น้อย</label>
-                                <label><input type="radio" name="q" value="ปานกลาง"> กลาง</label>
-                                <label><input type="radio" name="q" value="มาก"> มาก</label>
-                            </div>
-                        </div>
-                        <button class="btn-submit" onclick="sendReport('${place.id}','${place.displayName.replace(/'/g, "\\\\'")}')">อัปเดตสถานะเลย</button>
+                        <button class="btn-submit" onclick="sendReport('${place.id}','${place.displayName.replace(/'/g, "\\\\'")}')">อัปเดตสถานะ</button>
                     </div>`;
                 infowindow.setContent(html);
                 infowindow.open(map, marker);
@@ -249,14 +245,13 @@
 
         async function sendReport(id, name) {
             const fuelStatus = document.querySelector('input[name="f"]:checked').value;
-            const queueLevel = document.querySelector('input[name="q"]:checked').value;
             const btn = document.querySelector('.btn-submit');
             btn.innerText = "กำลังอัปเดต..."; btn.disabled = true;
 
             try {
                 await fetch(GAS_URL, { 
                     method: 'POST', 
-                    body: JSON.stringify({ placeId: id, placeName: name, fuelStatus, queueLevel, userId: lineUserId }) 
+                    body: JSON.stringify({ placeId: id, placeName: name, fuelStatus, userId: lineUserId }) 
                 });
                 location.reload();
             } catch (e) { alert("เกิดข้อผิดพลาด"); btn.disabled = false; }

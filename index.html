@@ -93,7 +93,7 @@
         .fuel-name { font-size: 11px; font-weight: 600; margin-bottom: 2px; }
         .fuel-price { font-size: 16px; font-weight: 700; }
 
-        /* ✅ สไตล์ปุ่มโดเนท */
+        /* ปุ่มโดเนท */
         .donate-btn {
             margin-top: 15px;
             padding: 10px;
@@ -116,6 +116,26 @@
         @keyframes heartBeat {
             0%, 100% { transform: scale(1); }
             50% { transform: scale(1.3); }
+        }
+
+        /* --- ✨ ใหม่: สไตล์หน้าจอขอบคุณ --- */
+        #thank-you-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none; 
+            justify-content: center; align-items: center;
+            z-index: 10000; flex-direction: column; text-align: center;
+            backdrop-filter: blur(8px);
+        }
+        .thank-you-card {
+            background: white; padding: 40px 20px; border-radius: 24px;
+            width: 85%; max-width: 320px; box-shadow: 0 20px 50px rgba(0,230,118,0.3);
+        }
+        .coffee-cup { font-size: 60px; margin-bottom: 15px; display: inline-block; }
+        .btn-back {
+            margin-top: 25px; background: var(--primary); color: #000;
+            border: none; padding: 12px 30px; border-radius: 12px;
+            font-weight: 700; cursor: pointer; font-family: 'Prompt';
         }
 
         /* InfoWindow */
@@ -143,6 +163,20 @@
         <div style="color: #aaa; font-size: 14px;">กำลังตรวจสอบสิทธิ์ LINE...</div>
     </div>
 
+    <div id="thank-you-overlay">
+        <div class="thank-you-card">
+            <div class="coffee-cup">☕✨</div>
+            <h2 style="color: #333; margin: 0;">ขอบคุณมากครับ!</h2>
+            <p style="color: #666; font-size: 14px; line-height: 1.6; margin-top: 10px;">
+                กาแฟแก้วนี้คือพลังสำคัญ <br> 
+                ให้โปรแกรมเมอร์ <span class="runner-mini">🏃💨</span> <br>
+                รีบปั่นฟีเจอร์ใหม่ๆ มาให้ใช้งานกันครับ!
+            </p>
+            <div style="font-size: 30px; margin-top: 10px;">❤️</div>
+            <button class="btn-back" onclick="closeThankYou()">กลับสู่หน้าแผนที่</button>
+        </div>
+    </div>
+
     <div class="header">
         <h1 class="brand">⛽ Gas<span>Ready</span></h1>
         <div id="user-profile"></div>
@@ -153,7 +187,7 @@
             <h3>ราคาน้ำมันวันนี้ 📈</h3>
             <div id="price-list"></div>
             
-            <a href="https://promptpay.io/ใส่เลขพร้อมเพย์ของคุณ" class="donate-btn" target="_blank">
+            <a href="https://promptpay.io/0944597416" class="donate-btn" onclick="showThankYou()" target="_blank">
                 <span class="heart">❤️</span> เลี้ยงกาแฟทีมพัฒนา ☕
             </a>
         </div>
@@ -167,6 +201,14 @@
         let map, infowindow, lineUserId = "";
         let dbStatus = {}; 
         let AdvancedMarkerElement, PinElement;
+
+        // ✅ ฟังก์ชันเปิด-ปิดหน้าจอขอบคุณ
+        function showThankYou() {
+            document.getElementById('thank-you-overlay').style.display = 'flex';
+        }
+        function closeThankYou() {
+            document.getElementById('thank-you-overlay').style.display = 'none';
+        }
 
         async function initMap() {
             try {
